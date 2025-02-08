@@ -41,6 +41,9 @@ public class AstalNetwork.Wifi : Object {
     public bool is_hotspot { get; private set; }
     public bool scanning { get; private set; }
 
+    public signal void access_point_added (AccessPoint access_point);
+    public signal void access_point_removed (AccessPoint access_point);
+
     internal Wifi(NM.DeviceWifi device) {
         this.device = device;
 
@@ -49,13 +52,17 @@ public class AstalNetwork.Wifi : Object {
 
         device.access_point_added.connect((access_point) => {
             var ap = (NM.AccessPoint)access_point;
-            _access_points.set(ap.bssid, new AccessPoint(this, ap));
+            var myap = new AccessPoint(this, ap);
+            _access_points.set(ap.bssid, myap);
+            access_point_added(myap);
             notify_property("access-points");
         });
 
         device.access_point_removed.connect((access_point) => {
             var ap = (NM.AccessPoint)access_point;
+            var myap = _access_points.get(ap.bssid);
             _access_points.remove(ap.bssid);
+            access_point_removed(myap);
             notify_property("access-points");
         });
 
